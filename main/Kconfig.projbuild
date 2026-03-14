@@ -66,4 +66,52 @@ menu "Prox"
         help
             GPIO number of the boot/user button (active-low).
 
+    choice PROX_TIMEZONE
+        prompt "Timezone"
+        default PROX_TZ_SGT
+        help
+            Select the local timezone. This sets the POSIX TZ environment
+            variable used by newlib's localtime_r() for the home-page clock.
+
+        config PROX_TZ_UTC
+            bool "UTC (Coordinated Universal Time, UTC+0)"
+        config PROX_TZ_SGT
+            bool "Singapore / Malaysia (SGT/MYT, UTC+8)"
+        config PROX_TZ_WIB
+            bool "Indonesia – Western (WIB, UTC+7, Jakarta/Sumatra)"
+        config PROX_TZ_WITA
+            bool "Indonesia – Central (WITA, UTC+8, Bali/Makassar)"
+        config PROX_TZ_WIT
+            bool "Indonesia – Eastern (WIT, UTC+9, Papua)"
+        config PROX_TZ_IST
+            bool "India (IST, UTC+5:30)"
+        config PROX_TZ_JST
+            bool "Japan (JST, UTC+9, Tokyo)"
+        config PROX_TZ_CET
+            bool "Central Europe (CET/CEST, UTC+1/+2, Berlin/Paris)"
+        config PROX_TZ_GMT
+            bool "United Kingdom (GMT/BST, UTC+0/+1, London)"
+        config PROX_TZ_EST
+            bool "US Eastern (EST/EDT, UTC-5/-4, New York)"
+        config PROX_TZ_PST
+            bool "US Pacific (PST/PDT, UTC-8/-7, Los Angeles)"
+    endchoice
+
+    config PROX_TZ_POSIX
+        string
+        default "UTC0"                          if PROX_TZ_UTC
+        default "SGT-8"                         if PROX_TZ_SGT
+        default "WIB-7"                         if PROX_TZ_WIB
+        default "WITA-8"                        if PROX_TZ_WITA
+        default "WIT-9"                         if PROX_TZ_WIT
+        default "IST-5:30"                      if PROX_TZ_IST
+        default "JST-9"                         if PROX_TZ_JST
+        default "CET-1CEST,M3.5.0,M10.5.0/3"   if PROX_TZ_CET
+        default "GMT0BST,M3.5.0/1,M10.5.0"      if PROX_TZ_GMT
+        default "EST5EDT,M3.2.0,M11.1.0"        if PROX_TZ_EST
+        default "PST8PDT,M3.2.0,M11.1.0"        if PROX_TZ_PST
+        help
+            POSIX TZ string derived from the timezone choice above.
+            Passed to setenv("TZ", ...) after NTP sync.
+
 endmenu

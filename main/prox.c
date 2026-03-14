@@ -14,6 +14,7 @@
 #include "u8g2.h"
 #include "page_weather.h"
 #include "page_adhan.h"
+#include "page_home.h"
 
 static const char *TAG = "app_main";
 
@@ -51,7 +52,8 @@ static const char *TAG = "app_main";
 
 /* ---- Pages --------------------------------------------------------------- */
 typedef enum {
-    PAGE_WEATHER = 0,
+    PAGE_HOME = 0,
+    PAGE_WEATHER,
     PAGE_ADHAN,
     PAGE_COUNT,
 } page_id_t;
@@ -63,7 +65,7 @@ typedef enum {
 static SemaphoreHandle_t   s_data_mutex;
 static openweather_data_t  s_weather  = {0};
 static adhan_timings_t     s_timings  = {0};
-static page_id_t           s_page     = PAGE_WEATHER;
+static page_id_t           s_page     = PAGE_HOME;
 
 /* u8g2 instance – only ever touched by display_task */
 static u8g2_t u8g2;
@@ -187,6 +189,7 @@ static void display_task(void *arg)
                 xSemaphoreGive(s_data_mutex);
 
                 ESP_LOGI(TAG, "Page -> %s",
+                         s_page == PAGE_HOME    ? "home"    :
                          s_page == PAGE_WEATHER ? "weather" : "adhan");
 
                 /* Immediate redraw after page switch */
@@ -210,6 +213,10 @@ static void display_task(void *arg)
 
             /* Draw the active page */
             switch (local_page) {
+            case PAGE_HOME:
+                page_home.draw(&u8g2);
+                break;
+
             case PAGE_WEATHER:
                 if (local_weather.city_name[0] != '\0') {
                     page_weather.draw(&u8g2, &local_weather);
@@ -292,6 +299,12 @@ void app_main(void)
      * 4. Sync time via NTP
      * ---------------------------------------------------------------- */
     sntp_init_and_sync();
+
+    /* Apply the timezone selected in menuconfig so that localtime_r()
+     * returns the correct local wall-clock time on the home page. */
+    setenv("TZ", CONFIG_PROX_TZ_POSIX, 1);
+    tzset();
+    ESP_LOGI(TAG, "Timezone set to: %s", CONFIG_PROX_TZ_POSIX);
 
     /* ------------------------------------------------------------------
      * 5. Initialise OpenWeather

@@ -2,9 +2,13 @@
 
 A smart, connected desktop display built on the ESP-IDF framework for the ESP32 (specifically developed for the ESP32-S3-DevKit-C1). The project uses a 128x128 SSD1327 OLED display to show real-time, location-aware data fetched over WiFi.
 
-Currently, the display features two interactive pages toggled via a hardware button:
-1. **Weather Page**: Shows live weather (temperature, humidity, conditions) via the OpenWeatherMap API, alongside current synchronised local time via NTP.
-2. **Adhan Page**: Shows daily Islamic prayer timings (Imsak, Fajr, Dhuhr, Asr, Maghrib, Isha) formatted in 12-hour AM/PM, fetched seamlessly from the AlAdhan API based on device coordinates.
+Currently, the display features three interactive pages toggled via a hardware button:
+1. **Home Page (Default)**: Shows big, clear local time (12-hour format with seconds) and date, automatically offset based on your selected `menuconfig` timezone (with DST support).
+   <br>![Home Page](img/PAGE_HOME.png)
+2. **Weather Page**: Shows live weather (temperature, humidity, feels-like, pressure, wind, sunrise/sunset, conditions) via the OpenWeatherMap API.
+   <br>![Weather Page](img/PAGE_OPENWEATHER.png)
+3. **Adhan Page**: Shows daily Islamic prayer timings (Imsak, Fajr, Dhuhr, Asr, Maghrib, Isha) formatted in 12-hour AM/PM, fetched seamlessly from the AlAdhan API based on device coordinates.
+   <br>![Adhan Page](img/PAGE_PRAYERTIMES.png)
 
 ![image](https://img.shields.io/badge/ESP--IDF-v5.x-blue.svg)
 ![image](https://img.shields.io/badge/Hardware-ESP32--S3-orange.svg)
@@ -48,8 +52,8 @@ Ensure you have the [ESP-IDF framework](https://docs.espressif.com/projects/esp-
 
 ### 2. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/esp32-prox.git
-cd esp32-prox
+git clone https://github.com/minthura/prox.git
+cd prox
 ```
 
 ### 3. Configure the Project
@@ -62,9 +66,10 @@ idf.py menuconfig
 Navigate to the **Prox Configuration** menu:
 
 1. **WiFi SSID** & **WiFi Password**: Enter your local WiFi network details.
-2. **OpenWeatherMap API Key**: Enter your free [OpenWeatherMap API Key](https://openweathermap.org/api).
-3. **Latitude & Longitude**: Enter your exact decimal GPS coordinates (e.g. `1.3264482`, `103.9283213`). 
-4. **Hardware Pins**: Adjust SPI and Button pins if your wiring differs from the default table above.
+2. **Timezone**: Select your local timezone from the list (e.g. SGT, WIB, EST) to automatically offset the NTP-synced clock.
+3. **OpenWeatherMap API Key**: Enter your free [OpenWeatherMap API Key](https://openweathermap.org/api).
+4. **Latitude & Longitude**: Enter your exact decimal GPS coordinates (e.g. `1.3264482`, `103.9283213`). 
+5. **Hardware Pins**: Adjust SPI and Button pins if your wiring differs from the default table above.
 
 Save (press `S`) and exit (press `Q`).
 
@@ -80,7 +85,7 @@ idf.py -p COM3 build flash monitor
 ## 🏗 Software Architecture
 
 - **`app_main()`**: Initialises the SSD1327 hardware, connects to WiFi, syncs NTP time, and spins up the FreeRTOS tasks.
-- **`weather_task`**: Wakes every 5 minutes to fetch updated weather data. Yields to FreeRTOS while waiting.
+- **`weather_task`**: Wakes every 30 minutes to fetch updated weather data. Yields to FreeRTOS while waiting.
 - **`adhan_task`**: Wakes every 6 hours to fetch fresh prayer timings for the current day.
 - **`display_task`**: High-priority task running every 100ms. Polls the BOOT button for presses (debounced) and commands the `u8g2` engine to draw the currently active page.
 - **Mutexing**: A global `SemaphoreHandle_t` protects the shared state variables (`s_weather`, `s_timings`, `s_page`) so incomplete data is never rendered to the screen by the display task.
