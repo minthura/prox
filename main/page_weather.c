@@ -2,56 +2,28 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 #include "openweather.h"
 #include "u8g2.h"
 
 /* =========================================================================
- * Local helpers
- * ====================================================================== */
-
-/* Format the current UTC timestamp into a local 12-hour time string
- * including seconds, e.g. "3:34:07 PM".
- * tz_offset_sec is the API's 'timezone' field (seconds east of UTC). */
-static void format_local_time_12h(int32_t tz_offset_sec,
-                                  char *buf, size_t buf_len)
-{
-    time_t utc_now  = time(NULL);
-    int64_t local   = (int64_t)utc_now + tz_offset_sec;
-    int total_secs  = (int)(local % 86400);
-    if (total_secs < 0) total_secs += 86400;
-    int hour = total_secs / 3600;
-    int min  = (total_secs % 3600) / 60;
-    int sec  = total_secs % 60;
-    const char *ampm = (hour < 12) ? "AM" : "PM";
-    int hour12 = hour % 12;
-    if (hour12 == 0) hour12 = 12;
-    snprintf(buf, buf_len, "%d:%02d:%02d %s", hour12, min, sec, ampm);
-}
-
-/* =========================================================================
  * Page draw
  *
- * 128x128 layout (y = baseline):
+ * 128x128 layout (y = baseline, font heights in brackets):
  *
- *  y=18  Time        — logisoso16 (big, centred)
- *  ─── separator ─────────────────────────────
- *  y=32  City name   — 6x10 (centred)
- *  y=44  Condition   — 6x10
- *  y=56  Temp / Hum  — 6x10
- *  ─── separator ─────────────────────────────
- *  y=72  Sunrise     — 6x10
- *  y=84  Sunset      — 6x10
- *  y=96  Feels like  — 6x10
- *  y=108 Pressure    — 6x10
- *  y=120 Wind        — 6x10
+ *  y=20  City name   — logisoso16 [h=18] (large, centred)
+ *  ─── separator ─────────────────────────────────────────
+ *  y=36  Condition   — 6x10
+ *  y=48  Temp / Hum  — 6x10   e.g. "28.5C  Hum:72%"
+ *  y=60  Feels like  — 6x10   e.g. "Feels: 30.1C"
+ *  ─── separator ─────────────────────────────────────────
+ *  y=76  Pressure    — 6x10   e.g. "Pressure: 1012 hPa"
+ *  y=88  Wind        — 6x10   e.g. "Wind: 3.5 m/s"
+ *  ─── separator ─────────────────────────────────────────
+ *  y=104 Sunrise     — 6x10   label + value right of it
+ *  y=116 Sunset      — 6x10
  * ====================================================================== */
 static void draw(u8g2_t *u8g2, const openweather_data_t *w)
 {
-    /* --- Current time --------------------------------------------------- */
-    char time_str[20];
-    format_local_time_12h(w->timezone_offset, time_str, sizeof(time_str));
-
     /* --- Derived weather strings ---------------------------------------- */
     float temp_c = openweather_kelvin_to_celsius(w->temp_kelvin);
     char temp_hum[24];
@@ -60,10 +32,10 @@ static void draw(u8g2_t *u8g2, const openweather_data_t *w)
 
     float feels_c = openweather_kelvin_to_celsius(w->feels_like_kelvin);
     char feels_str[20];
-    snprintf(feels_str, sizeof(feels_str), "Feels like: %.1fC", feels_c);
+    snprintf(feels_str, sizeof(feels_str), "Feels: %.1fC", feels_c);
 
-    char pressure_str[20];
-    snprintf(pressure_str, sizeof(pressure_str), "Pressure: %.0fhPa", w->pressure_hpa);
+    char pressure_str[22];
+    snprintf(pressure_str, sizeof(pressure_str), "Pressure: %.0f hPa", w->pressure_hpa);
 
     char wind_str[20];
     snprintf(wind_str, sizeof(wind_str), "Wind: %.1f m/s", w->wind_speed_ms);
@@ -83,42 +55,40 @@ static void draw(u8g2_t *u8g2, const openweather_data_t *w)
     /* --- Draw ----------------------------------------------------------- */
     u8g2_ClearBuffer(u8g2);
 
-    /* Time (large, centred) */
-    u8g2_SetFont(u8g2, u8g2_font_logisoso16_tf);
-    uint8_t tw = u8g2_GetStrWidth(u8g2, time_str);
-    u8g2_DrawStr(u8g2, (128 - tw) / 2, 18, time_str);
-
-    u8g2_DrawHLine(u8g2, 0, 21, 128);
-
-    /* City name (centred) */
-    u8g2_SetFont(u8g2, u8g2_font_6x10_tf);
+    /* City name (large, centred) */
+    u8g2_SetFont(u8g2, u8g2_font_t0_11b_tf);
     uint8_t cw = u8g2_GetStrWidth(u8g2, w->city_name);
-    u8g2_DrawStr(u8g2, (128 - cw) / 2, 32, w->city_name);
+    u8g2_DrawStr(u8g2, (128 - cw) / 2, 20, w->city_name);
+
+    u8g2_DrawHLine(u8g2, 0, 24, 128);
 
     /* Condition description */
-    u8g2_DrawStr(u8g2, 0, 44, desc);
+    u8g2_SetFont(u8g2, u8g2_font_6x10_tf);
+    u8g2_DrawStr(u8g2, 0, 36, desc);
 
     /* Temperature + humidity */
-    u8g2_DrawStr(u8g2, 0, 56, temp_hum);
-
-    u8g2_DrawHLine(u8g2, 0, 60, 128);
-
-    /* Sunrise */
-    u8g2_DrawStr(u8g2, 0,  72, "Sunrise:");
-    u8g2_DrawStr(u8g2, 56, 72, sunrise_str);
-
-    /* Sunset */
-    u8g2_DrawStr(u8g2, 0,  84, "Sunset:");
-    u8g2_DrawStr(u8g2, 56, 84, sunset_str);
+    u8g2_DrawStr(u8g2, 0, 48, temp_hum);
 
     /* Feels like */
-    u8g2_DrawStr(u8g2, 0,  96, feels_str);
+    u8g2_DrawStr(u8g2, 0, 60, feels_str);
+
+    u8g2_DrawHLine(u8g2, 0, 64, 128);
 
     /* Pressure */
-    u8g2_DrawStr(u8g2, 0, 108, pressure_str);
+    u8g2_DrawStr(u8g2, 0, 76, pressure_str);
 
     /* Wind speed */
-    u8g2_DrawStr(u8g2, 0, 120, wind_str);
+    u8g2_DrawStr(u8g2, 0, 88, wind_str);
+
+    u8g2_DrawHLine(u8g2, 0, 92, 128);
+
+    /* Sunrise */
+    u8g2_DrawStr(u8g2, 0,  104, "Sunrise:");
+    u8g2_DrawStr(u8g2, 56, 104, sunrise_str);
+
+    /* Sunset */
+    u8g2_DrawStr(u8g2, 0,  116, "Sunset:");
+    u8g2_DrawStr(u8g2, 56, 116, sunset_str);
 
     u8g2_SendBuffer(u8g2);
 }

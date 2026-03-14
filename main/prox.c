@@ -41,7 +41,7 @@ static const char *TAG = "app_main";
 #define STACK_DISPLAY  4096   /* GPIO + u8g2 drawing only */
 
 /* ---- Task periods -------------------------------------------------------- */
-#define WEATHER_FETCH_MS   (5 * 60 * 1000)        /*  5 minutes */
+#define WEATHER_FETCH_MS   (30 * 60 * 1000)       /* 30 minutes */
 #define ADHAN_FETCH_MS     (6 * 60 * 60 * 1000)   /*  6 hours   */
 #define DISPLAY_TICK_MS    100                     /* 100 ms — responsive button */
 #define DISPLAY_REFRESH_MS 1000                    /*  1 s  — screen update     */
