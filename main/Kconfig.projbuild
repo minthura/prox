@@ -1,0 +1,69 @@
+menu "Prox"
+
+    config PROX_WIFI_SSID
+        string "WiFi SSID"
+        default ""
+        help
+            SSID of the WiFi access point to connect to.
+
+    config PROX_WIFI_PASS
+        string "WiFi Password"
+        default ""
+        help
+            Password for the WiFi access point.
+
+    config PROX_OW_API_KEY
+        string "OpenWeatherMap API Key"
+        default ""
+        help
+            API key for the OpenWeatherMap service.
+
+    config PROX_OW_LAT
+        string "Latitude"
+        default "1.3264482"
+        help
+            Location latitude as a decimal string (e.g. "1.3264482").
+
+    config PROX_OW_LON
+        string "Longitude"
+        default "103.9283213"
+        help
+            Location longitude as a decimal string (e.g. "103.9283213").
+
+    config PROX_DISP_MOSI
+        int "Display MOSI GPIO"
+        default 11
+        help
+            GPIO number connected to the SSD1327 SPI MOSI line.
+
+    config PROX_DISP_CLK
+        int "Display CLK GPIO"
+        default 12
+        help
+            GPIO number connected to the SSD1327 SPI clock line.
+
+    config PROX_DISP_CS
+        int "Display CS GPIO"
+        default 10
+        help
+            GPIO number connected to the SSD1327 SPI chip-select line.
+
+    config PROX_DISP_DC
+        int "Display DC GPIO"
+        default 4
+        help
+            GPIO number connected to the SSD1327 data/command line.
+
+    config PROX_DISP_RESET
+        int "Display RESET GPIO"
+        default 5
+        help
+            GPIO number connected to the SSD1327 reset line.
+
+    config PROX_BOOT_BTN
+        int "Boot Button GPIO"
+        default 0
+        help
+            GPIO number of the boot/user button (active-low).
+
+endmenu

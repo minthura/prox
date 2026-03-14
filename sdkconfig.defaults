@@ -1,0 +1,3 @@
+# Main task only runs init code now; heavy HTTPS work is in dedicated tasks
+# with explicit stacks (STACK_WEATHER/STACK_ADHAN = 8 KB each).
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=4096

@@ -1,0 +1,22 @@
+# ESP-IDF build output
+build/
+dependencies.lock
+
+# Configuration files
+sdkconfig
+sdkconfig.old
+
+# CMake and build system artifacts
+CMakeCache.txt
+CMakeFiles/
+*.cmake
+*.ninja
+
+# IDE / Editor folders
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
